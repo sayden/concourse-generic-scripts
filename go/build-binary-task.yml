@@ -9,7 +9,7 @@ image_resource:
 inputs:
   - name: repo
     path: gopath/src/github.com/thehivecorporation/raccoon
-  - name: concourse-generic-scripts
+  - name: generic
 
 run:
   path: sh
