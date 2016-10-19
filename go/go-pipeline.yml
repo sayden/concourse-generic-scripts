@@ -17,6 +17,7 @@ jobs:
       - aggregate:
         - get: repo
         - get: concourse-generic-scripts
+          trigger: true
       - task: unit-test-task
         file: concourse-generic-scripts/go/unit-test-task.yml
 
@@ -27,6 +28,7 @@ jobs:
           passed: [unit-tests]
           trigger: true
         - get: concourse-generic-scripts
+          trigger: true
       - task: integration-test-task
         file: concourse-generic-scripts/go/integration-test-task.yml
   
@@ -37,5 +39,6 @@ jobs:
           passed: [unit-tests]
           trigger: true
         - get: concourse-generic-scripts
+          trigger: true
       - task: build-binary
         file: concourse-generic-scripts/go/build-binary-task.yml
