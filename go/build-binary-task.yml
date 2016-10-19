@@ -2,11 +2,14 @@ platform: linux
 
 image_resource:
   type: docker-image
-  source: {repository: golang}
+  source: 
+    - repository: golang
+    - tag: 1.7.1
 
 inputs:
   - name: repo
     path: gopath/src/github.com/thehivecorporation/raccoon
+  - name: generic
 
 run:
   path: sh

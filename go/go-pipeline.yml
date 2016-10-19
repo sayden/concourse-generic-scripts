@@ -16,20 +16,21 @@ jobs:
     plan:
       - get: repo
       - get: generic
-    task: unit-test-task
-    file: concourse-generic-scripts/go/unit-test-task.yml
+      - task: unit-test-task
+        file: concourse-generic-scripts/go/unit-test-task.yml
 
-  - name: integration-tests
+  - name: integration-tests plan
     plan:
       - get: repo
         passed: [unit-tests]
       - get: generic
-      task: integration-test-task
-      file: concourse-generic-scripts/go/integration-test-task.yml
-  # - name: build-binary
-  #   plan:
-  #     get: repo
-
-  #     get: generic
-  #     task: build-binary
-  #     file: concourse-generic-scripts/go/build-binary-task.yml
+      - task: integration-test-task
+        file: concourse-generic-scripts/go/integration-test-task.yml
+  
+  - name: build-binary
+    plan:
+      - get: repo
+        passed: [unit-tests]
+      - get: generic
+      - task: build-binary
+        file: concourse-generic-scripts/go/build-binary-task.yml
