@@ -6,7 +6,7 @@ image_resource:
   tag: 1.7.1
 
 inputs:
-- name: concourse-generic-scripts.git
+- name: concourse-generic-scripts
 - name: repo
   path: gopath/src/github.com/thehivecorporation/raccoon
 
