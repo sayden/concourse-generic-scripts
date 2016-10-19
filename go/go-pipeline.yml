@@ -1,0 +1,35 @@
+resources:
+  - name: repo
+    type: git
+    source:
+      uri: https://github.com/thehivecorporation/raccoon.git
+      branch: develop
+
+  - name: generic
+    type: git
+    source:
+      uri: https://github.com/sayden/concourse-generic-scripts
+      branch: master
+
+jobs:
+  - name: unit-tests
+    plan:
+      - get: repo
+      - get: generic
+    task: unit-test-task
+    file: concourse-generic-scripts/go/unit-test-task.yml
+
+  - name: integration-tests
+    plan:
+      - get: repo
+        passed: [unit-tests]
+      - get: generic
+      task: integration-test-task
+      file: concourse-generic-scripts/go/integration-test-task.yml
+  # - name: build-binary
+  #   plan:
+  #     get: repo
+
+  #     get: generic
+  #     task: build-binary
+  #     file: concourse-generic-scripts/go/build-binary-task.yml

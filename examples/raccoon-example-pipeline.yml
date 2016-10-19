@@ -1,0 +1,48 @@
+resources:
+- name: raccoon
+  type: git
+  source:
+    uri: https://github.com/thehivecorporation/raccoon.git
+    branch: develop
+
+jobs:
+  - name: unit-tests
+    public: true
+    serial: true
+    plan:
+    - get: raccoon
+    - task: run-unit-tests
+      config:
+        platform: linux
+        image_resource:
+          type: docker-image
+          source: {repository: golang}
+        inputs:
+        - name: raccoon
+          path: gopath/src/github.com/thehivecorporation/raccoon
+        run:
+          path: sh
+          args:
+          - -exc
+          - |
+            export GOPATH=$(pwd)/gopath
+            cd $GOPATH/src/github.com/thehivecorporation/raccoon
+            go test $(go list ./... | grep -v /vendor/) -run=\!Integration
+
+    - task: run-integration-tests
+      config:
+        platform: linux
+        image_resource:
+          type: docker-image
+          source: {repository: golang}
+        inputs:
+          - name: repo
+            path: gopath/src/github.com/thehivecorporation/raccoon
+        run:
+          path: sh
+          args:
+          - -exc
+          - |
+            export GOPATH=$(pwd)/gopath
+            cd $GOPATH/src/github.com/thehivecorporation/raccoon
+            go test $(go list ./... | grep -v /vendor/) -run=\Integration

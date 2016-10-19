@@ -1,0 +1,75 @@
+jobs:
+  - name: tests
+    plan:
+      - task: unit tests
+        config:
+          platform: linux
+          image_resource:
+            type: docker-image
+            source: {repository: golang}
+          inputs:
+            name: ci
+          run:
+            path: sh
+            args:
+            - -exc
+            - |
+              ls
+        config:
+          platform: linux
+          image_resource:
+            type: docker-image
+            source: {repository: golang}
+          run:
+            path: echo
+            args: ["integration-tests"]
+
+      - task: create-folder
+        config:
+          platform: linux
+          image_resource:
+            type: docker-image
+            source: {repository: golang}
+          run:
+            path: sh
+            args:
+            - -exc
+            - |
+              ls
+              mkdir -p some-files
+          outputs:
+            - name: some-files
+
+      - task: create-folder
+        config:
+          platform: linux
+          image_resource:
+            type: docker-image
+            source: {repository: golang}
+          inputs:
+            - name: some-files
+          run:
+            path: sh
+            args:
+            - -exc
+            - |
+              pwd
+              ls
+              touch some-files/some-file
+
+      - task: deploy
+        config:
+          platform: linux
+          image_resource:
+            type: docker-image
+            source: {repository: golang}
+          inputs:
+            - name: some-files
+          run:
+            path: sh
+            args:
+            - -exc
+            - |
+              pwd
+              ls
+              ls some-files
