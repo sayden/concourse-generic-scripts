@@ -10,6 +10,8 @@ resources:
     source:
       uri: https://github.com/sayden/concourse-generic-scripts.git
       branch: master
+      username: sayden
+      password: {{password}}
 
 jobs:
   - name: unit-tests
@@ -41,4 +43,35 @@ jobs:
         - get: concourse-generic-scripts
           trigger: true
       - task: build-binary
-        file: concourse-generic-scripts/go/build-binary-task.yml
+        config:
+          platform: linux
+          image_resource:
+            type: docker-image
+            source: 
+              - repository: golang
+              - tag: 1.7.1
+          inputs:
+            - name: repo
+              path: gopath/src/github.com/thehivecorporation/raccoon
+          run:
+            path: sh
+            args:
+            - -exc
+            - |
+              export ROOT=$(pwd)
+              export GOPATH=$(pwd)/gopath
+              git clone https://github.com/sayden/concourse-generic-scripts.git
+              cd $GOPATH/src/github.com/thehivecorporation/raccoon
+              go build -o $ROOT/concourse-generic-scripts/releases-examples/raccoon
+              cd $ROOT/concourse-generic-scripts
+              git config --global user.email "mariocaster@gmail.com"
+              git config --global user.name "sayden"
+              git add .
+              git commit -m "Test"
+          outputs:
+            - name: binary
+              path: concourse-generic-scripts
+
+      - put: concourse-generic-scripts
+        params:
+          repository: binary
