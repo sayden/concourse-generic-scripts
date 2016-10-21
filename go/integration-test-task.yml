@@ -1,5 +1,5 @@
+---
 platform: linux
-
 image_resource:
   type: docker-image
   source: 
@@ -18,4 +18,12 @@ run:
   - |
     export GOPATH=$(pwd)/gopath
     cd $GOPATH/src/github.com/thehivecorporation/raccoon
-    go test $(go list ./... | grep -v /vendor/) -run=\Integration
+    apt-get update
+    apt-get install -y openssh-server
+    mkdir /var/run/sshd
+    echo 'root:root' | chpasswd
+    sed -ri 's/^PermitRootLogin\s+.*/PermitRootLogin yes/' /etc/ssh/sshd_config
+    sed -ri 's/UsePAM yes/#UsePAM yes/g' /etc/ssh/sshd_config
+    /usr/sbin/sshd
+    go get -u -t ./...
+    go test $(go list ./... | grep -v /vendor/) -v -run=\Integration
