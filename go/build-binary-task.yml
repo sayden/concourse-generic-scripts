@@ -19,6 +19,8 @@ run:
     export GOPATH=$(pwd)/gopath
     cd $GOPATH/src/github.com/thehivecorporation/raccoon
     go build -o bin/raccoon
+    cp bin/raccoon $GOPATH/../concourse-generic-scripts/releases-examples
 
 outputs:
-  - name: bin
+  - name: binary
+    path: $GOPATH/src/github.com/thehivecorporation/raccoon/bin

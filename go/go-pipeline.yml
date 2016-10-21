@@ -53,6 +53,7 @@ jobs:
           inputs:
             - name: repo
               path: gopath/src/github.com/thehivecorporation/raccoon
+            - name: concourse-generic-scripts
           run:
             path: sh
             args:
@@ -60,17 +61,11 @@ jobs:
             - |
               export ROOT=$(pwd)
               export GOPATH=$(pwd)/gopath
-              git clone https://github.com/sayden/concourse-generic-scripts.git
               cd $GOPATH/src/github.com/thehivecorporation/raccoon
-              go build -o $ROOT/concourse-generic-scripts/releases-examples/raccoon
-              cd $ROOT/concourse-generic-scripts
-              git config --global user.email "mariocaster@gmail.com"
-              git config --global user.name "sayden"
-              git add .
-              git commit -m "Test"
+              go build -o $ROOT/releases-examples/raccoon
           outputs:
             - name: binary
-              path: concourse-generic-scripts
+              path: releases-examples
 
       - put: concourse-generic-scripts
         params:
