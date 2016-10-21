@@ -13,6 +13,13 @@ resources:
       username: sayden
       password: {{password}}
 
+  - name: concourse-generic-release
+    type: github-release
+    source:
+      repository: https://github.com/sayden/concourse-generic-scripts.git
+      user: sayden
+      password: {{password}}
+
 jobs:
   - name: unit-tests
     plan:
@@ -33,7 +40,7 @@ jobs:
           trigger: true
       - task: integration-test-task
         file: concourse-generic-scripts/go/integration-test-task.yml
-  
+
   - name: build-binary
     plan:
       - aggregate:
@@ -63,10 +70,18 @@ jobs:
               export GOPATH=$(pwd)/gopath
               cd $GOPATH/src/github.com/thehivecorporation/raccoon
               go build -o $ROOT/releases-examples/raccoon
+              cd $ROOT/releases-examples
+              tar zcvf raccoon_v0.0.1.tar.gz raccoon
+              echo "raccoon" > name
+              echo "0.0.1" > tag
+              echo "body" > body
           outputs:
-            - name: binary
-              path: releases-examples
+            - name: releases-examples
 
-      - put: concourse-generic-scripts
+      - put: concourse-generic-release
         params:
-          repository: binary
+          globs: 
+          - releases-examples/*.tar.gz
+          name: releases-examples/name
+          tag: releases-examples/tag
+          body: releases-examples/body
