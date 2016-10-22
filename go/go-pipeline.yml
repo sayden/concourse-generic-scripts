@@ -1,8 +1,25 @@
 resources:
-  - name: repo
+  - name: semver
+    type: semver
+    source:
+      initial_version: 0.0.2
+      driver: git
+      uri: {{repository}}
+      branch: semver
+      file: semver
+      username: sayden
+      password: {{password}}
+
+  - name: repo-master
     type: git
     source:
-      uri: https://github.com/thehivecorporation/raccoon.git
+      uri: {{repository}}
+      branch: master
+
+  - name: repo-develop
+    type: git
+    source:
+      uri: {{repository}}
       branch: develop
 
   - name: concourse-generic-scripts
@@ -16,67 +33,68 @@ resources:
   - name: concourse-generic-release
     type: github-release
     source:
-      repository: https://github.com/sayden/concourse-generic-scripts.git
+      repository: concourse-generic-scripts
       user: sayden
       password: {{password}}
+      access_token: {{token}}
+
 
 jobs:
-  - name: unit-tests
+  - name: unit-tests-master
     plan:
-      - aggregate:
-        - get: repo
-        - get: concourse-generic-scripts
+      - do:
+        - get: repo-master
           trigger: true
+        - get: concourse-generic-scripts
       - task: unit-test-task
         file: concourse-generic-scripts/go/unit-test-task.yml
+        input_mapping: {repo: repo-master}
 
-  - name: integration-tests
+  - name: unit-tests-develop
     plan:
-      - aggregate:
-        - get: repo
-          passed: [unit-tests]
+      - do:
+        - get: repo-develop
           trigger: true
         - get: concourse-generic-scripts
+      - task: unit-test-task
+        file: concourse-generic-scripts/go/unit-test-task.yml
+        input_mapping: {repo: repo-develop}
+
+  - name: integration-tests-master
+    plan:
+      - do:
+        - get: repo-master
+          passed: [unit-tests-master]
           trigger: true
+        - get: concourse-generic-scripts
       - task: integration-test-task
         file: concourse-generic-scripts/go/integration-test-task.yml
+        input_mapping: {repo: repo-master}
 
-  - name: build-binary
+  - name: integration-tests-develop
     plan:
-      - aggregate:
-        - get: repo
-          passed: [unit-tests]
+      - do:
+        - get: repo-develop
+          passed: [unit-tests-develop]
           trigger: true
         - get: concourse-generic-scripts
+      - task: integration-test-task
+        file: concourse-generic-scripts/go/integration-test-task.yml
+        input_mapping: {repo: repo-develop}
+
+  - name: publish-minor-release
+    plan:
+      - do:
+        - get: semver
+          params: {bump: minor}
+        - get: repo-master
+          passed: [integration-tests-master]
           trigger: true
+        - get: concourse-generic-scripts
       - task: build-binary
-        config:
-          platform: linux
-          image_resource:
-            type: docker-image
-            source: 
-              - repository: golang
-              - tag: 1.7.1
-          inputs:
-            - name: repo
-              path: gopath/src/github.com/thehivecorporation/raccoon
-            - name: concourse-generic-scripts
-          run:
-            path: sh
-            args:
-            - -exc
-            - |
-              export ROOT=$(pwd)
-              export GOPATH=$(pwd)/gopath
-              cd $GOPATH/src/github.com/thehivecorporation/raccoon
-              go build -o $ROOT/releases-examples/raccoon
-              cd $ROOT/releases-examples
-              tar zcvf raccoon_v0.0.1.tar.gz raccoon
-              echo "raccoon" > name
-              echo "0.0.1" > tag
-              echo "body" > body
-          outputs:
-            - name: releases-examples
+        file: concourse-generic-scripts/go/publish.yml
+        input_mapping:
+          repo: repo-master
 
       - put: concourse-generic-release
         params:
@@ -85,3 +103,30 @@ jobs:
           name: releases-examples/name
           tag: releases-examples/tag
           body: releases-examples/body
+      - put: semver
+        params:
+          bump: minor
+
+  - name: publish-patch-release
+    plan:
+      - do:
+        - get: semver
+          params: {bump: patch}
+        - get: repo-develop
+          passed: [integration-tests-develop]
+          trigger: true
+        - get: concourse-generic-scripts
+      - task: build-binary
+        file: concourse-generic-scripts/go/publish.yml
+        input_mapping: {repo: repo-develop}
+
+      - put: concourse-generic-release
+        params:
+          globs: 
+          - releases-examples/*.tar.gz
+          name: releases-examples/name
+          tag: releases-examples/tag
+          body: releases-examples/body
+      - put: semver
+        params:
+          bump: patch

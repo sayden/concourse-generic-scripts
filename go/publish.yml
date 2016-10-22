@@ -7,7 +7,7 @@ image_resource:
     - tag: 1.7.1
 inputs:
   - name: repo
-    path: gopath/src/github.com/thehivecorporation/raccoon
+    path: gopath/src/{{repository}}
   - name: concourse-generic-scripts
   - name: semver
 run:
@@ -17,12 +17,12 @@ run:
   - |
     export ROOT=$(pwd)
     export GOPATH=$(pwd)/gopath
-    cd $GOPATH/src/github.com/thehivecorporation/raccoon
-    go build -o $ROOT/releases-examples/raccoon
+    cd $GOPATH/src/{{repository}}
+    go build -o $ROOT/releases-examples/{{app_name}}
     cd $ROOT/releases-examples
-    echo "raccoon" > name
     cat $ROOT/semver/version > tag
-    echo "body" > body
-    tar zcvf raccoon_$(cat tag).tar.gz raccoon
+    echo "{{app_name}}_$(cat tag)" > name
+    git log `git describe --tags --abbrev=0`..HEAD --oneline | awk '{$1=""; print $0}' > body
+    tar zcvf {{app_name}}_$(cat tag).tar.gz {{app_name}}
 outputs:
   - name: releases-examples

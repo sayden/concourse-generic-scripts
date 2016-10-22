@@ -8,7 +8,7 @@ image_resource:
 
 inputs:
 - name: repo
-  path: gopath/src/github.com/thehivecorporation/raccoon
+  path: gopath/src/{{repo_path}}
 - name: concourse-generic-scripts
 
 run:
@@ -17,7 +17,7 @@ run:
   - -exc
   - |
     export GOPATH=$(pwd)/gopath
-    cd $GOPATH/src/github.com/thehivecorporation/raccoon
+    cd $GOPATH/src/{{repo_path}}
     apt-get update
     apt-get install -y openssh-server
     mkdir /var/run/sshd

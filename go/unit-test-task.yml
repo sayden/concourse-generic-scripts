@@ -9,13 +9,7 @@ image_resource:
 inputs:
 - name: concourse-generic-scripts
 - name: repo
-  path: gopath/src/github.com/thehivecorporation/raccoon
+  path: gopath/src/{{repopath}}
 
 run:
-  path: sh
-  args:
-  - -exc
-  - |
-    export GOPATH=$(pwd)/gopath
-    cd $GOPATH/src/github.com/thehivecorporation/raccoon
-    go test $(go list ./... | grep -v /vendor/) -run=\!Integration
+  path: ./concourse-generic-scripts/go/unit-test-script.sh
