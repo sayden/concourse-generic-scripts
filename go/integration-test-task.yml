@@ -6,23 +6,13 @@ image_resource:
     - repository: golang
     - tag: 1.7.1
 
+params:
+  repopath: {{repopath}}
+
 inputs:
 - name: repo
-  path: gopath/src/{{repo_path}}
+  path: gopath/src/{{repopath}}
 - name: concourse-generic-scripts
 
 run:
-  path: sh
-  args:
-  - -exc
-  - |
-    export GOPATH=$(pwd)/gopath
-    cd $GOPATH/src/{{repo_path}}
-    apt-get update
-    apt-get install -y openssh-server
-    mkdir /var/run/sshd
-    echo 'root:root' | chpasswd
-    sed -ri 's/^PermitRootLogin\s+.*/PermitRootLogin yes/' /etc/ssh/sshd_config
-    sed -ri 's/UsePAM yes/#UsePAM yes/g' /etc/ssh/sshd_config
-    /usr/sbin/sshd
-    go test $(go list ./... | grep -v /vendor/) -v -run=\Integration
+  path: ./concourse-generic-scripts/go/integration-test-script.sh
