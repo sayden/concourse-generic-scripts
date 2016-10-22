@@ -25,5 +25,4 @@ run:
     sed -ri 's/^PermitRootLogin\s+.*/PermitRootLogin yes/' /etc/ssh/sshd_config
     sed -ri 's/UsePAM yes/#UsePAM yes/g' /etc/ssh/sshd_config
     /usr/sbin/sshd
-    go get -u -t ./...
     go test $(go list ./... | grep -v /vendor/) -v -run=\Integration
