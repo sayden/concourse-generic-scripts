@@ -1,0 +1,21 @@
+platform: linux
+
+image_resource:
+  type: docker-image
+  source: 
+    - repository: golang
+    - tag: 1.7.1
+
+inputs:
+- name: concourse-generic-scripts
+- name: repo
+  path: gopath/src/github.com/thehivecorporation/raccoon
+
+run:
+  path: sh
+  args:
+  - -exc
+  - |
+    export GOPATH=$(pwd)/gopath
+    cd $GOPATH/src/github.com/thehivecorporation/raccoon
+    go test $(go list ./... | grep -v /vendor/) -run=\!Integration

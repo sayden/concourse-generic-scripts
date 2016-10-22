@@ -1,0 +1,132 @@
+resources:
+  - name: semver
+    type: semver
+    source:
+      initial_version: 0.0.2
+      driver: git
+      uri: https://github.com/thehivecorporation/raccoon.git
+      branch: semver
+      file: semver
+      username: sayden
+      password: {{password}}
+
+  - name: repo-master
+    type: git
+    source:
+      uri: https://github.com/thehivecorporation/raccoon.git
+      branch: master
+
+  - name: repo-develop
+    type: git
+    source:
+      uri: https://github.com/thehivecorporation/raccoon.git
+      branch: develop
+
+  - name: concourse-generic-scripts
+    type: git
+    source:
+      uri: https://github.com/sayden/concourse-generic-scripts.git
+      branch: master
+      username: sayden
+      password: {{password}}
+
+  - name: concourse-generic-release
+    type: github-release
+    source:
+      repository: concourse-generic-scripts
+      user: sayden
+      password: {{password}}
+      access_token: {{token}}
+
+
+jobs:
+  - name: unit-tests-master
+    plan:
+      - do:
+        - get: repo-master
+          trigger: true
+        - get: concourse-generic-scripts
+      - task: unit-test-task
+        file: concourse-generic-scripts/raccoon/unit-test-task.yml
+        input_mapping: {repo: repo-master}
+
+  - name: unit-tests-develop
+    plan:
+      - do:
+        - get: repo-develop
+          trigger: true
+        - get: concourse-generic-scripts
+      - task: unit-test-task
+        file: concourse-generic-scripts/raccoon/unit-test-task.yml
+        input_mapping: {repo: repo-develop}
+
+  - name: integration-tests-master
+    plan:
+      - do:
+        - get: repo-master
+          passed: [unit-tests-master]
+          trigger: true
+        - get: concourse-generic-scripts
+      - task: integration-test-task
+        file: concourse-generic-scripts/raccoon/integration-test-task.yml
+        input_mapping: {repo: repo-master}
+
+  - name: integration-tests-develop
+    plan:
+      - do:
+        - get: repo-develop
+          passed: [unit-tests-develop]
+          trigger: true
+        - get: concourse-generic-scripts
+      - task: integration-test-task
+        file: concourse-generic-scripts/raccoon/integration-test-task.yml
+        input_mapping: {repo: repo-develop}
+
+  - name: publish-minor-release
+    plan:
+      - do:
+        - get: semver
+          params: {bump: minor}
+        - get: repo-master
+          passed: [integration-tests-master]
+          trigger: true
+        - get: concourse-generic-scripts
+      - task: build-binary
+        file: concourse-generic-scripts/raccoon/publish.yml
+        input_mapping:
+          repo: repo-master
+
+      - put: concourse-generic-release
+        params:
+          globs: 
+          - releases-examples/*.tar.gz
+          name: releases-examples/name
+          tag: releases-examples/tag
+          body: releases-examples/body
+      - put: semver
+        params:
+          bump: minor
+
+  - name: publish-patch-release
+    plan:
+      - do:
+        - get: semver
+          params: {bump: patch}
+        - get: repo-develop
+          passed: [integration-tests-develop]
+          trigger: true
+        - get: concourse-generic-scripts
+      - task: build-binary
+        file: concourse-generic-scripts/raccoon/publish.yml
+        input_mapping: {repo: repo-develop}
+
+      - put: concourse-generic-release
+        params:
+          globs: 
+          - releases-examples/*.tar.gz
+          name: releases-examples/name
+          tag: releases-examples/tag
+          body: releases-examples/body
+      - put: semver
+        params:
+          bump: patch
