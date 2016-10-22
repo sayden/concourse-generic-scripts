@@ -6,6 +6,9 @@ image_resource:
     - repository: golang
     - tag: 1.7.1
 
+params:
+	repopath: {{repopath}}
+
 inputs:
 - name: concourse-generic-scripts
 - name: repo
