@@ -1,3 +1,3 @@
 # concourse-generic-scripts
 
-Dislaimer: This is still a WIP project
+Disclaimer: This is still a WIP project
